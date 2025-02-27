@@ -25,7 +25,7 @@
       display: block;
       margin: 10px 0 5px;
     }
-    input, select, button {
+    input, select, textarea, button {
       width: 100%;
       padding: 10px;
       margin-bottom: 15px;
@@ -42,6 +42,19 @@
     button:hover {
       background-color: #218838;
     }
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #777;
+    }
+    footer a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
     @media (max-width: 600px) {
       .container {
         padding: 15px;
@@ -54,7 +67,10 @@
     <h2>Delivery Communication Channel</h2>
     <form id="communicationForm">
       <label for="customerNumber">Customer Number:</label>
-      <input type="text" id="customerNumber" name="customerNumber" required />
+      <input type="text" id="customerNumber" name="customerNumber" placeholder="Include country code e.g., 15551234567" required />
+
+      <label for="customerName">Customer Name (optional):</label>
+      <input type="text" id="customerName" name="customerName" placeholder="Enter customer name (optional)" />
 
       <label for="message">Communication Message:</label>
       <select id="message" name="message" required>
@@ -65,7 +81,10 @@
         <option value="cancelled">Cancelled</option>
       </select>
 
-      <button type="submit">Send Message</button>
+      <label for="customMessage">Custom Message (optional):</label>
+      <textarea id="customMessage" name="customMessage" placeholder="Enter any additional message here"></textarea>
+
+      <button type="submit">Send Message via WhatsApp</button>
     </form>
 
     <div id="records">
@@ -73,48 +92,79 @@
       <ul id="recordList"></ul>
     </div>
   </div>
+  
+  <footer>
+    &copy; Developed by Jihal Shimray. 
+    <a href="https://www.example.com" target="_blank">External Link</a>
+  </footer>
 
   <script>
-    // Reference the form and record list elements
     const form = document.getElementById('communicationForm');
     const recordList = document.getElementById('recordList');
 
-    // Listen for form submission
+    // Helper function to format the selected message (e.g., "order_confirmed" to "Order Confirmed")
+    function formatMessage(value) {
+      return value.split('_')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
+    }
+
     form.addEventListener('submit', function(e) {
       e.preventDefault();
 
-      // Get form values
-      const customerNumber = document.getElementById('customerNumber').value;
-      const message = document.getElementById('message').value;
+      const customerNumber = document.getElementById('customerNumber').value.trim();
+      const customerName = document.getElementById('customerName').value.trim();
+      const messageValue = document.getElementById('message').value;
+      const customMessage = document.getElementById('customMessage').value.trim();
       const timestamp = new Date().toLocaleString();
 
-      // Create a record object
-      const record = { customerNumber, message, timestamp };
+      if (!customerNumber || !messageValue) {
+        alert("Please fill in the required fields.");
+        return;
+      }
 
-      // Retrieve existing records from local storage, or initialize an empty array
+      // Format the selected communication message
+      const formattedMessage = formatMessage(messageValue);
+
+      // Construct the final WhatsApp message
+      let finalMessage = "";
+      // Add a greeting if a customer name is provided
+      if (customerName) {
+        finalMessage += `Hello ${customerName}, `;
+      } else {
+        finalMessage += "Hello, ";
+      }
+      finalMessage += `your order status is: ${formattedMessage} from DROPEE.`;
+      
+      if (customMessage) {
+        finalMessage += ` ${customMessage}.`;
+      }
+      finalMessage += " Thank you for choosing DROPEE.";
+
+      // Build the WhatsApp API URL
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${encodeURIComponent(customerNumber)}&text=${encodeURIComponent(finalMessage)}`;
+
+      // Open WhatsApp chat in a new tab/window
+      window.open(whatsappUrl, '_blank');
+
+      // Save the record in local storage
+      const record = { customerNumber, customerName, message: formattedMessage, customMessage, finalMessage, timestamp };
       const records = JSON.parse(localStorage.getItem('records')) || [];
-
-      // Add new record
       records.push(record);
-
-      // Save updated records back to local storage
       localStorage.setItem('records', JSON.stringify(records));
-
-      // Update the displayed record list
       updateRecords();
 
       // Reset the form
       form.reset();
     });
 
-    // Function to update the record list display
     function updateRecords() {
       const records = JSON.parse(localStorage.getItem('records')) || [];
-      recordList.innerHTML = '';  // Clear existing list
+      recordList.innerHTML = '';
 
-      records.forEach((record) => {
+      records.forEach(record => {
         const li = document.createElement('li');
-        li.textContent = `${record.timestamp} - Customer: ${record.customerNumber} - Message: ${record.message}`;
+        li.textContent = `${record.timestamp} - Customer: ${record.customerName || record.customerNumber} - Message: ${record.message} - Custom: ${record.customMessage}`;
         recordList.appendChild(li);
       });
     }
