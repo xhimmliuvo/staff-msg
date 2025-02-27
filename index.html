@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="google-site-verification" content="dPCdTcn3rYHVKGz1ZGUOlzQQFYh9lD4FZpwbdj1Fahc" />
+  <meta name="google-site-verification" content="dPCdTcn3rYHVKGz1ZGUOlzQQFYh9lD4FZpwbdj1Fahc" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Delivery Communication Channel</title>
@@ -67,8 +67,8 @@
   <div class="container">
     <h2>Delivery Communication Channel</h2>
     <form id="communicationForm">
-      <label for="customerNumber">Customer Number:</label>
-      <input type="text" id="customerNumber" name="customerNumber" placeholder="+91" required />
+      <label for="customerNumber">Customer Mobile Number:</label>
+      <input type="tel" id="customerNumber" name="customerNumber" placeholder="Enter mobile number (without country code)" required />
 
       <label for="customerName">Customer Name (optional):</label>
       <input type="text" id="customerName" name="customerName" placeholder="Enter customer name (optional)" />
@@ -113,7 +113,7 @@
     form.addEventListener('submit', function(e) {
       e.preventDefault();
 
-      const customerNumber = document.getElementById('customerNumber').value.trim();
+      let customerNumber = document.getElementById('customerNumber').value.trim();
       const customerName = document.getElementById('customerName').value.trim();
       const messageValue = document.getElementById('message').value;
       const customMessage = document.getElementById('customMessage').value.trim();
@@ -124,19 +124,27 @@
         return;
       }
 
+      // Auto-add +91 if not present
+      if (!customerNumber.startsWith('+')) {
+        // If the number already starts with 91 (but no +), then add the plus symbol
+        if (customerNumber.startsWith('91')) {
+          customerNumber = '+' + customerNumber;
+        } else {
+          customerNumber = '+91' + customerNumber;
+        }
+      }
+
       // Format the selected communication message
       const formattedMessage = formatMessage(messageValue);
 
       // Construct the final WhatsApp message
       let finalMessage = "";
-      // Add a greeting if a customer name is provided
       if (customerName) {
         finalMessage += `Hello ${customerName}, `;
       } else {
         finalMessage += "Hello, ";
       }
-      finalMessage += `your order status is: ${formattedMessage} from DROPEE.`;
-      
+      finalMessage += `your order status is: ${formattedMessage} ,from DROPEE.`;
       if (customMessage) {
         finalMessage += ` ${customMessage}.`;
       }
@@ -155,14 +163,12 @@
       localStorage.setItem('records', JSON.stringify(records));
       updateRecords();
 
-      // Reset the form
       form.reset();
     });
 
     function updateRecords() {
       const records = JSON.parse(localStorage.getItem('records')) || [];
       recordList.innerHTML = '';
-
       records.forEach(record => {
         const li = document.createElement('li');
         li.textContent = `${record.timestamp} - Customer: ${record.customerName || record.customerNumber} - Message: ${record.message} - Custom: ${record.customMessage}`;
