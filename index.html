@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Delivery Communication Channel</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Delivery Communication Channel</h2>
+    <form id="communicationForm">
+      <label for="customerNumber">Customer Number:</label>
+      <input type="text" id="customerNumber" name="customerNumber" required />
+
+      <label for="message">Communication Message:</label>
+      <select id="message" name="message" required>
+        <option value="">--Select Message--</option>
+        <option value="order_confirmed">Order Confirmed</option>
+        <option value="out_for_delivery">Out For Delivery</option>
+        <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+
+      <button type="submit">Send Message</button>
+    </form>
+
+    <div id="records">
+      <h3>Saved Records</h3>
+      <ul id="recordList"></ul>
+    </div>
+  </div>
+
+  <script>
+    // Reference the form and record list elements
+    const form = document.getElementById('communicationForm');
+    const recordList = document.getElementById('recordList');
+
+    // Listen for form submission
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Get form values
+      const customerNumber = document.getElementById('customerNumber').value;
+      const message = document.getElementById('message').value;
+      const timestamp = new Date().toLocaleString();
+
+      // Create a record object
+      const record = { customerNumber, message, timestamp };
+
+      // Retrieve existing records from local storage, or initialize an empty array
+      const records = JSON.parse(localStorage.getItem('records')) || [];
+
+      // Add new record
+      records.push(record);
+
+      // Save updated records back to local storage
+      localStorage.setItem('records', JSON.stringify(records));
+
+      // Update the displayed record list
+      updateRecords();
+
+      // Reset the form
+      form.reset();
+    });
+
+    // Function to update the record list display
+    function updateRecords() {
+      const records = JSON.parse(localStorage.getItem('records')) || [];
+      recordList.innerHTML = '';  // Clear existing list
+
+      records.forEach((record) => {
+        const li = document.createElement('li');
+        li.textContent = `${record.timestamp} - Customer: ${record.customerNumber} - Message: ${record.message}`;
+        recordList.appendChild(li);
+      });
+    }
+
+    // Initialize record list on page load
+    updateRecords();
+  </script>
+</body>
+</html>
