@@ -73,15 +73,14 @@
       <label for="customerName">Customer Name (optional):</label>
       <input type="text" id="customerName" name="customerName" placeholder="Enter customer name (optional)" />
 
-     <label for="message">Communication Message:</label>
-<select id="message" name="message">
-  <option value="">--Select Message--</option>
-  <option value="order_confirmed">Order Confirmed</option>
-  <option value="out_for_delivery">Out For Delivery</option>
-  <option value="delivered">Delivered</option>
-  <option value="cancelled">Cancelled</option>
-</select>
-
+      <label for="message">Communication Message (optional):</label>
+      <select id="message" name="message">
+        <option value="">--Select Message--</option>
+        <option value="order_confirmed">Order Confirmed</option>
+        <option value="out_for_delivery">Out For Delivery</option>
+        <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
 
       <label for="customMessage">Custom Message (optional):</label>
       <textarea id="customMessage" name="customMessage" placeholder="Enter any additional message here"></textarea>
@@ -120,14 +119,13 @@
       const customMessage = document.getElementById('customMessage').value.trim();
       const timestamp = new Date().toLocaleString();
 
-      if (!customerNumber || !messageValue) {
+      if (!customerNumber) {
         alert("Please fill in the required fields.");
         return;
       }
 
       // Auto-add +91 if not present
       if (!customerNumber.startsWith('+')) {
-        // If the number already starts with 91 (but no +), then add the plus symbol
         if (customerNumber.startsWith('91')) {
           customerNumber = '+' + customerNumber;
         } else {
@@ -135,21 +133,29 @@
         }
       }
 
-      // Format the selected communication message
-      const formattedMessage = formatMessage(messageValue);
-
-      // Construct the final WhatsApp message
       let finalMessage = "";
       if (customerName) {
         finalMessage += `Hello ${customerName}, `;
       } else {
         finalMessage += "Hello, ";
       }
-      finalMessage += `your order status is: ${formattedMessage} ,from DROPEE.`;
-      if (customMessage) {
-        finalMessage += ` ${customMessage}.`;
+
+      // If a communication message is selected, include the order status
+      if (messageValue) {
+        const formattedMessage = formatMessage(messageValue);
+        finalMessage += `your order status is: ${formattedMessage}, from DROPEE. `;
+        // If a custom message is also provided, add it afterwards
+        if (customMessage) {
+          finalMessage += `${customMessage}. `;
+        }
+      } else {
+        // If no communication message is chosen, use the custom message if provided,
+        // without adding the "your order status is:" phrase.
+        if (customMessage) {
+          finalMessage += `${customMessage}. `;
+        }
       }
-      finalMessage += " Thank you for choosing DROPEE.";
+      finalMessage += "Thank you for choosing DROPEE.";
 
       // Build the WhatsApp API URL
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${encodeURIComponent(customerNumber)}&text=${encodeURIComponent(finalMessage)}`;
@@ -158,7 +164,14 @@
       window.open(whatsappUrl, '_blank');
 
       // Save the record in local storage
-      const record = { customerNumber, customerName, message: formattedMessage, customMessage, finalMessage, timestamp };
+      const record = { 
+        customerNumber, 
+        customerName, 
+        message: messageValue ? formatMessage(messageValue) : '', 
+        customMessage, 
+        finalMessage, 
+        timestamp 
+      };
       const records = JSON.parse(localStorage.getItem('records')) || [];
       records.push(record);
       localStorage.setItem('records', JSON.stringify(records));
